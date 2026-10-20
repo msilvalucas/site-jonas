@@ -284,5 +284,5 @@ em, .it { font-style: italic; text-transform: none; }
   .menu-toggle { display: inline-block; }
   .build { display: none; }
   .build-m { display: flex; flex-direction: column; }
-  .g-item--4 { margin-left: 0; }
+  .g-item--4, .g-item--6 { margin-left: 0; }
 }
