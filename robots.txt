@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://msilvalucas.github.io/site-jonas/sitemap.xml

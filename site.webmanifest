@@ -1,0 +1,11 @@
+{
+  "name": "Jonas Vidal Jr. Atelier",
+  "short_name": "Jonas Vidal Jr.",
+  "description": "Atelier sob medida em Passo Fundo, RS — figurinos, trajes de festa, criações autorais e adereços.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F6F4EF",
+  "theme_color": "#101010",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
