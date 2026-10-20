@@ -34,30 +34,77 @@
       });
     }
     setHeader(dark);
+    const scrolled = window.scrollY > 40 || document.body.style.position === 'fixed';
+    if (scrolled !== header.classList.contains('is-scrolled')) header.classList.toggle('is-scrolled', scrolled);
     if (waFloat) waFloat.classList.toggle('is-hidden', window.scrollY < window.innerHeight * 0.6);
   }
 
   /* ---------- Menu mobile ---------- */
   const menuBtn = $('[data-menu-toggle]');
   const menu = $('#menu-mobile');
+  const menuLinks = $$('a', menu);
+  const page = $('#conteudo');
+  let lenis = null;
+  let lockedY = 0;
+
+  // Trava o fundo (funciona também no iOS, onde overflow:hidden no body não basta)
+  function lockScroll(lock) {
+    const bs = document.body.style;
+    if (lock) {
+      lockedY = window.scrollY;
+      bs.position = 'fixed'; bs.top = (-lockedY) + 'px'; bs.left = '0'; bs.right = '0';
+    } else {
+      bs.position = bs.top = bs.left = bs.right = '';
+      window.scrollTo(0, lockedY);
+      // com o body fixo o Lenis mediu a página com altura zero: remede antes de rolar
+      if (lenis) { lenis.resize(); lenis.scrollTo(lockedY, { immediate: true, force: true }); }
+    }
+  }
   function setMenu(open) {
+    if (open === menuOpen) return;
     menuOpen = open;
-    menu.hidden = !open;
     menuBtn.setAttribute('aria-expanded', String(open));
     menuBtn.textContent = open ? 'Fechar' : 'Menu';
-    document.body.style.overflow = open ? 'hidden' : '';
+    if (page) page.inert = open;
+    document.documentElement.classList.toggle('menu-open', open);
+    lockScroll(open);
     headerDark = null;
     updateHeader();
-    if (open) menu.querySelector('a').focus();
+    if (open) {
+      menu.hidden = false;
+      if (window.gsap && !reduce) {
+        gsap.killTweensOf([menu, menuLinks]);
+        gsap.fromTo(menu, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35, ease: 'power2.out' });
+        gsap.fromTo(menuLinks, { yPercent: 60, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.8, stagger: 0.06, ease: 'expo.out', delay: 0.05 });
+      }
+      menuLinks[0].focus({ preventScroll: true });
+    } else {
+      if (window.gsap) gsap.killTweensOf([menu, menuLinks]);
+      menu.hidden = true;
+    }
   }
   menuBtn.addEventListener('click', () => setMenu(!menuOpen));
   window.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && menuOpen) { setMenu(false); menuBtn.focus(); }
+    if (!menuOpen) return;
+    if (e.key === 'Escape') { setMenu(false); menuBtn.focus(); return; }
+    if (e.key === 'Tab') { // mantém o foco dentro do menu
+      const f = [menuBtn].concat(menuLinks);
+      const i = f.indexOf(document.activeElement);
+      e.preventDefault();
+      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
   });
   matchMedia('(max-width: 899px)').addEventListener('change', () => { if (menuOpen) setMenu(false); });
 
   /* ---------- Rolagem suave ---------- */
+  const expoInOut = t => (t === 0 || t === 1) ? t : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2;
   function scrollToTarget(target) {
+    if (lenis) {
+      const el = typeof target === 'number' ? null : $(target);
+      const y = el ? el.getBoundingClientRect().top + window.scrollY : (+target || 0);
+      lenis.scrollTo(y, { duration: 1.4, easing: expoInOut, force: true });
+      return;
+    }
     if (window.gsap && window.ScrollToPlugin) {
       gsap.to(window, { duration: reduce ? 0 : 1.4, ease: 'expo.inOut', scrollTo: { y: target, autoKill: true } });
       return;
@@ -70,7 +117,8 @@
     if (!href || href.charAt(0) !== '#') return;
     e.preventDefault();
     if (menuOpen) setMenu(false);
-    scrollToTarget(href === '#topo' ? 0 : href);
+    // espera o desbloqueio do scroll antes de animar
+    requestAnimationFrame(() => scrollToTarget(href === '#topo' ? 0 : href));
     history.replaceState(null, '', href);
   }));
   const toTop = $('[data-to-top]');
@@ -98,6 +146,16 @@
 
   const ST = window.ScrollTrigger;
   gsap.registerPlugin(ST, window.ScrollToPlugin);
+  // Não recalcula tudo quando a barra de endereço do celular aparece/some
+  ST.config({ ignoreMobileResize: true });
+
+  /* ---------- Lenis: rolagem suave sincronizada com o GSAP ---------- */
+  if (!reduce && window.Lenis) {
+    lenis = new window.Lenis({ duration: 1.1, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+    lenis.on('scroll', ST.update);
+    gsap.ticker.add(time => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+  }
 
   /* ---------- Hero (entrada, roda uma vez) ---------- */
   let heroSeamPlayed = reduce;
@@ -244,7 +302,7 @@
     if (!r) {
       gsap.to('[data-hero-img-inner]', {
         yPercent: 6, ease: 'none',
-        scrollTrigger: { trigger: '[data-hero]', start: 'top top', end: 'bottom top', scrub: true }
+        scrollTrigger: { trigger: '[data-hero]', start: 'top top', end: 'bottom top', scrub: 0.6 }
       });
 
       $$('[data-lines]').filter(visible).forEach(el => gsap.from($$('[data-line]', el), {
@@ -257,10 +315,11 @@
           clipPath: 'inset(0% 0% 0% 0%)', duration: 1.6, ease: 'power4.inOut',
           scrollTrigger: { trigger: el, start: 'top 88%' }
         });
-        const p = $('[data-parallax]', el);
+        // parallax só no desktop: no celular pesa e não acrescenta muito
+        const p = desktop && $('[data-parallax]', el);
         if (p) gsap.fromTo(p, { yPercent: -4 }, {
           yPercent: 4, ease: 'none',
-          scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: true }
+          scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: 0.8 }
         });
       });
 
@@ -271,7 +330,7 @@
 
       $$('[data-zoom-m]').filter(visible).forEach(el => gsap.fromTo(el, { scale: 1.15 }, {
         scale: 1.7, ease: 'none',
-        scrollTrigger: { trigger: el.parentNode, start: 'top bottom', end: 'bottom top', scrub: true }
+        scrollTrigger: { trigger: el.parentNode, start: 'top bottom', end: 'bottom top', scrub: 0.8 }
       }));
     }
 
