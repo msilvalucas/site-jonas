@@ -48,7 +48,7 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preload" as="image" href="assets/img/rosa-corpo-inteiro-1400.webp" imagesrcset="assets/img/rosa-corpo-inteiro-800.webp 800w, assets/img/rosa-corpo-inteiro-1400.webp 1400w, assets/img/rosa-corpo-inteiro-2000.webp 2000w" imagesizes="100vw" fetchpriority="high">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/style.css?v=4">
 
 <!-- Dados estruturados (Schema.org) -->
 <script type="application/ld+json">
@@ -129,7 +129,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
-<script src="js/main.js?v=2" defer></script>
+<script src="js/main.js?v=3" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -143,8 +143,9 @@
     <a href="#construcao" data-scroll><span>02</span>A Construção</a>
     <a href="#classicos" data-scroll><span>03</span>Clássicos</a>
     <a href="#figurinos" data-scroll><span>04</span>Figurinos &amp; Adereços</a>
-    <a href="#artista" data-scroll><span>05</span>O Artista</a>
-    <a href="#contato" data-scroll><span>06</span>Contato</a>
+    <a href="#galeria" data-scroll><span>05</span>Galeria</a>
+    <a href="#artista" data-scroll><span>06</span>O Artista</a>
+    <a href="#contato" data-scroll><span>07</span>Contato</a>
   </nav>
   <button type="button" class="menu-toggle" data-menu-toggle aria-expanded="false" aria-controls="menu">MENU</button>
 </header>
@@ -154,8 +155,9 @@
   <a href="#construcao" data-scroll><span>02</span>A Construção</a>
   <a href="#classicos" data-scroll><span>03</span>Clássicos</a>
   <a href="#figurinos" data-scroll><span>04</span>Figurinos &amp; Adereços</a>
-  <a href="#artista" data-scroll><span>05</span>O Artista</a>
-  <a href="#contato" data-scroll><span>06</span>Contato</a>
+  <a href="#galeria" data-scroll><span>05</span>Galeria</a>
+  <a href="#artista" data-scroll><span>06</span>O Artista</a>
+  <a href="#contato" data-scroll><span>07</span>Contato</a>
   <p>PASSO FUNDO — RS</p>
 </nav>
 
@@ -325,14 +327,34 @@
   </div>
 </section>
 
-<!-- ===== 05 O ARTISTA E O ATELIER ===== -->
+<!-- ===== 05 GALERIA ===== -->
+<section id="galeria" class="galeria" aria-labelledby="galeria-titulo" data-galeria>
+  <div class="fig-head">
+    <p class="mono uni-kicker">05 — GALERIA</p>
+    <h2 id="galeria-titulo" class="uni-title"><span class="mask-line"><span data-reveal-line>GALERIA</span></span></h2>
+    <div class="fig-sub">
+      <p class="uni-quote">Cada criação, de perto.</p>
+      <p class="mono" data-gal-count aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div class="gal-filters">
+    <div class="gal-chips" role="group" aria-label="Categorias" data-gal-cats></div>
+    <div class="gal-chips gal-chips--sub" role="group" aria-label="Subcategorias" data-gal-subs hidden></div>
+  </div>
+
+  <div class="gal-grid" data-gal-grid></div>
+  <p class="mono gal-status" data-gal-status>Carregando galeria…</p>
+</section>
+
+<!-- ===== 06 O ARTISTA E O ATELIER ===== -->
 <section id="artista" class="artista" aria-labelledby="artista-titulo">
   <div class="artista-inner">
     <div class="artista-fig" data-parallax-wrap>
       <div class="artista-parallax" data-parallax><img src="assets/img/jonas-retrato.webp" alt="Retrato em preto e branco do estilista Jonas Vidal Jr." width="110" height="110" loading="lazy" decoding="async"></div>
     </div>
     <div class="artista-text">
-      <p class="mono uni-kicker">05 — O ARTISTA E O ATELIER</p>
+      <p class="mono uni-kicker">06 — O ARTISTA E O ATELIER</p>
       <h2 id="artista-titulo" class="artista-title">
         <span class="mask-line"><span data-reveal-line>Jonas</span></span>
         <span class="mask-line"><span data-reveal-line>Vidal Jr.</span></span>
@@ -355,7 +377,7 @@
 <!-- ===== 06 CONTATO ===== -->
 <section id="contato" class="contato" aria-labelledby="contato-titulo">
   <div class="stripe stripe--thin" data-stripe aria-hidden="true"></div>
-  <p class="mono uni-kicker">06 — CONTATO</p>
+  <p class="mono uni-kicker">07 — CONTATO</p>
   <h2 id="contato-titulo" class="contato-title">
     <span class="mask-line"><span data-reveal-line>Sua ideia merece</span></span>
     <span class="mask-line"><span data-reveal-line>uma criação única<span class="c-red">.</span></span></span>
@@ -422,6 +444,23 @@
       </div>
       <a class="btn-solid" href="#" target="_blank" rel="noopener" data-p-wa>CONVERSAR SOBRE UMA CRIAÇÃO →</a>
     </div>
+  </div>
+</div>
+<!-- ===== GALERIA: FOTO AMPLIADA ===== -->
+<div class="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada" hidden data-lb data-lenis-prevent>
+  <div class="lb-bar">
+    <span class="mono lb-kicker" data-lb-kicker></span>
+    <button type="button" class="btn-line" data-lb-close>FECHAR ✕</button>
+  </div>
+  <div class="lb-stage" data-lb-stage>
+    <button type="button" class="btn-square lb-nav lb-prev" data-lb-prev aria-label="Foto anterior">←</button>
+    <img class="lb-img" alt="" data-lb-img>
+    <button type="button" class="btn-square lb-nav lb-next" data-lb-next aria-label="Próxima foto">→</button>
+  </div>
+  <div class="lb-foot">
+    <p class="lb-cap" data-lb-cap></p>
+    <span class="mono lb-count" data-lb-count></span>
+    <a class="btn-solid" href="#" target="_blank" rel="noopener" data-lb-wa>CONVERSAR SOBRE UMA CRIAÇÃO →</a>
   </div>
 </div>
 </body>

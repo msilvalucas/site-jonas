@@ -186,6 +186,138 @@
     if (e.key === 'Tab') trapTab(e, [menuBtn].concat(menuLinks));
   });
 
+  /* ---------- Galeria (índice gerado por scripts/otimizar-fotos.mjs) ---------- */
+  const gal = $('[data-galeria]');
+  if (gal) {
+    const g = s => $('[data-gal-' + s + ']', gal);
+    const grid = g('grid'), catsEl = g('cats'), subsEl = g('subs'), statusEl = g('status'), countEl = g('count');
+    const lb = $('[data-lb]');
+    const l = s => $('[data-lb-' + s + ']', lb);
+    let data = null, cat = 'destaques', sub = null, list = [];
+    let lbOpen = false, lbIdx = 0, opener = null;
+
+    const nomeCat = id => (data.categorias.find(c => c.id === id) || {}).nome || '';
+    const nomeSub = (c, id) => ((data.categorias.find(x => x.id === c) || { subs: [] }).subs.find(s => s.id === id) || {}).nome || '';
+    const srcset = f => f.larguras.map(w => f.src + '-' + w + '.webp ' + w + 'w').join(', ');
+    const menorQue = (f, max) => f.larguras.filter(w => w <= max).pop() || f.larguras[0];
+    const refreshST = () => { if (window.ScrollTrigger) requestAnimationFrame(() => window.ScrollTrigger.refresh()); };
+    const chip = (label, total, pressed, onClick) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'gal-chip'; b.setAttribute('aria-pressed', String(pressed));
+      b.append(label);
+      const n = document.createElement('span'); n.className = 'gal-n'; n.textContent = total; b.append(n);
+      b.addEventListener('click', onClick);
+      return b;
+    };
+
+    function renderList() {
+      list = cat === 'destaques' ? data.fotos.filter(f => f.destaque)
+        : cat === 'todas' ? data.fotos
+        : data.fotos.filter(f => f.cat === cat && (!sub || f.sub === sub));
+      const frag = document.createDocumentFragment();
+      list.forEach((f, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'gal-item'; b.dataset.i = i;
+        const img = new Image();
+        img.src = f.src + '-' + menorQue(f, 800) + '.webp';
+        img.srcset = srcset(f);
+        img.sizes = '(min-width: 1024px) 400px, 50vw';
+        img.alt = f.alt; img.width = f.w; img.height = f.h;
+        img.loading = 'lazy'; img.decoding = 'async';
+        b.append(img); frag.append(b);
+      });
+      grid.replaceChildren(frag);
+      const rotulo = cat === 'destaques' ? 'DESTAQUES' : cat === 'todas' ? 'TODAS AS FOTOS' : nomeCat(cat).toUpperCase() + (sub ? ' · ' + nomeSub(cat, sub).toUpperCase() : '');
+      countEl.textContent = rotulo + ' — ' + list.length + (list.length === 1 ? ' FOTO' : ' FOTOS');
+      refreshST();
+    }
+
+    function renderSubs() {
+      const c = data.categorias.find(x => x.id === cat);
+      const subs = c ? c.subs : [];
+      subsEl.hidden = subs.length < 2;
+      if (subsEl.hidden) return subsEl.replaceChildren();
+      subsEl.replaceChildren(chip('Todas', c.total, !sub, () => { sub = null; renderSubs(); renderList(); }),
+        ...subs.map(s => chip(s.nome, s.total, sub === s.id, () => { sub = s.id; renderSubs(); renderList(); })));
+    }
+
+    function renderCats() {
+      const total = data.fotos.length, dest = data.fotos.filter(f => f.destaque).length;
+      const pick = id => () => { cat = id; sub = null; renderCats(); renderSubs(); renderList(); };
+      catsEl.replaceChildren(
+        chip('Destaques', dest, cat === 'destaques', pick('destaques')),
+        chip('Todas', total, cat === 'todas', pick('todas')),
+        ...data.categorias.map(c => chip(c.nome, c.total, cat === c.id, pick(c.id))));
+    }
+
+    function load() {
+      fetch('assets/galeria/galeria.json?v=3').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(j => {
+        data = j; statusEl.hidden = true;
+        renderCats(); renderSubs(); renderList();
+      }).catch(() => {
+        statusEl.innerHTML = 'Não foi possível carregar a galeria agora. Veja o portfólio no <a href="https://www.instagram.com/jonasxch/" target="_blank" rel="noopener">Instagram</a>.';
+      });
+    }
+    // só baixa o índice quando a seção está perto de aparecer
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); load(); } }, { rootMargin: '900px 0px' });
+      io.observe(gal);
+    } else load();
+
+    /* --- Foto ampliada --- */
+    function lbShow(i) {
+      lbIdx = (i + list.length) % list.length;
+      const f = list[lbIdx], img = l('img');
+      img.srcset = srcset(f); img.sizes = '100vw';
+      img.src = f.src + '-' + f.larguras[f.larguras.length - 1] + '.webp';
+      img.alt = f.alt;
+      l('cap').textContent = f.alt;
+      l('kicker').textContent = (nomeCat(f.cat) + (f.sub ? ' · ' + nomeSub(f.cat, f.sub) : '')).toUpperCase();
+      l('count').textContent = (lbIdx + 1) + ' / ' + list.length;
+      const single = list.length < 2;
+      l('prev').disabled = single; l('next').disabled = single;
+      l('wa').href = wa('Olá, Jonas! Vi uma foto de ' + nomeCat(f.cat).toLowerCase() + ' na galeria do site e gostaria de conversar sobre uma criação parecida.');
+      // pré-carrega as vizinhas
+      [1, -1].forEach(d => { const n = list[(lbIdx + d + list.length) % list.length]; if (n && n !== f) new Image().src = n.src + '-' + n.larguras[n.larguras.length - 1] + '.webp'; });
+    }
+    function lbClose() {
+      if (!lbOpen) return;
+      lbOpen = false; lb.hidden = true;
+      page.inert = false; header.inert = false;
+      lockScroll(false);
+      if (opener) opener.focus({ preventScroll: true });
+    }
+    grid.addEventListener('click', e => {
+      const b = e.target.closest('.gal-item');
+      if (!b) return;
+      opener = b; lbOpen = true;
+      lbShow(+b.dataset.i);
+      lb.hidden = false;
+      page.inert = true; header.inert = true;
+      lockScroll(true);
+      l('close').focus({ preventScroll: true });
+    });
+    l('close').addEventListener('click', lbClose);
+    l('prev').addEventListener('click', () => lbShow(lbIdx - 1));
+    l('next').addEventListener('click', () => lbShow(lbIdx + 1));
+    // clicar no fundo (fora da foto e dos botões) também fecha
+    l('stage').addEventListener('click', e => { if (e.target === e.currentTarget) lbClose(); });
+    // deslizar para o lado troca de foto no celular
+    let tx = 0, ty = 0;
+    l('stage').addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+    l('stage').addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) lbShow(lbIdx + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    window.addEventListener('keydown', e => {
+      if (!lbOpen) return;
+      if (e.key === 'Escape') lbClose();
+      else if (e.key === 'ArrowLeft') lbShow(lbIdx - 1);
+      else if (e.key === 'ArrowRight') lbShow(lbIdx + 1);
+      else if (e.key === 'Tab') trapTab(e, $$('button:not(:disabled), a[href]', lb));
+    });
+  }
+
   /* ---------- Rolagem suave ---------- */
   const expoInOut = t => (t === 0 || t === 1) ? t : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2;
   function scrollToTarget(target) {

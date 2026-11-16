@@ -1,3 +1,4 @@
 # Originais em PNG (44 MB) ficam só no computador; o site usa assets/img/*.webp
 assets/*.png
 .DS_Store
+node_modules/

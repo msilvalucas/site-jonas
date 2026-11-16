@@ -1,0 +1,9 @@
+{
+  "name": "site-jonas-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Ferramentas de build das imagens da galeria (não fazem parte do site publicado)",
+  "devDependencies": {
+    "sharp": "^0.34.0"
+  }
+}
